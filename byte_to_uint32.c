@@ -10,6 +10,12 @@
         snprintf(dst, (sz-1), fmt, data); \
     } while(0)
 
+static inline uint32_t swap_uint32(uint32_t val)
+{
+    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF ); 
+    return (val << 16) | (val >> 16);
+}
+
 int main()
 {
     /*
@@ -17,26 +23,15 @@ int main()
      *  4 bytes Ethernet RX,
      *  \n\r OK
     */
-    char    byte[32] = { 0x30, 0x30, 0x30, 0x31,
-                    0x32, 0x32, 0x32, 0x32,
+    char    byte[32] = { 0x00, 0x00, 0x03, 0xE8,
+                    0x00, 0x01, 0x00, 0x00,
                     0x0A, 0x0D, 0x4F, 0x4B };
-    size_t  i;
-    for (i = 0; i < 4; i++) {
-        printf("%c\n", byte[i]);
-    }
 
     uint32_t    eth_tx = 0, eth_rx = 0;
 
-    eth_tx = (uint32_t) (byte[0] << 24 | byte[1] << 16 | byte[2] << 8 | byte[3]);
-    eth_rx = (uint32_t) (byte[4] << 24 | byte[5] << 16 | byte[6] << 8 | byte[7]);
+    eth_tx = swap_uint32(*(uint32_t *) byte);
+    eth_rx = swap_uint32(*(uint32_t *) (byte + sizeof (uint32_t)));
 
     printf("ethtx: %u\n", eth_tx);
     printf("ethrx: %u\n", eth_rx);
-
-    char    ether_tx[16], ether_rx[16];
-
-    snzprintf(ether_tx, "%c%c%c%c%c", byte[0], byte[1], byte[2], byte[3], '\0');
-    snzprintf(ether_rx, "%c%c%c%c%c", byte[4], byte[5], byte[6], byte[7], '\0');
-
-    printf("ether-tx: %s ether-rx: %s\n", ether_tx, ether_rx);
 }
